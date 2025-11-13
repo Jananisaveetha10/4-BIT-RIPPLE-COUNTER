@@ -44,29 +44,49 @@ In timing diagram Q0 is changing as soon as the negative edge of clock pulse is 
 */
 
 ```
-module ripplecounter(clk, rst, count);
-input wire clk;
-input wire rst;
-output reg [3:0] count;
+module Exp_12 (
+    input clk,      // Clock input
+    input reset,    // Reset input (active high)
+    output [3:0] q  // 4-bit output
+);
 
-always @(posedge clk or posedge rst)
-begin
-	if(rst)
-		count <= 4'b0000;
-	else
-		count <= count + 1;
-end
+    reg [3:0] q_int;
+
+    // Assign internal register to output
+    assign q = q_int;
+
+    // First flip-flop toggles with main clock
+    always @(posedge clk) begin
+        if (reset)
+            q_int[0] <= 1'b0;       // Reset first bit
+        else
+            q_int[0] <= ~q_int[0];  // Toggle first bit
+    end
+
+    // Generate remaining flip-flops
+    genvar i;
+    generate
+        for (i = 1; i < 4; i = i + 1) begin : ripple
+            always @(negedge q_int[i-1] or posedge reset) begin
+                if (reset)
+                    q_int[i] <= 1'b0;       // Reset bit
+                else
+                    q_int[i] <= ~q_int[i];  // Toggle bit on previous bit’s clock
+            end
+        end
+    endgenerate
+
 endmodule
 ```
 
 **RTL LOGIC FOR 4 Bit Ripple Counter**
 
-<img width="776" height="276" alt="Screenshot 2025-11-06 132348" src="https://github.com/user-attachments/assets/0f37d5a5-6d73-4672-b74c-9189f7c3a2ca" />
+<img width="1265" height="466" alt="Screenshot 2025-11-13 130958" src="https://github.com/user-attachments/assets/95940ca9-d869-404c-ac8d-c9f7a2bad4be" />
 
 
 **TIMING DIGRAMS FOR 4 Bit Ripple Counter**
 
-<img width="1303" height="673" alt="Screenshot 2025-11-06 132422" src="https://github.com/user-attachments/assets/fc037fe1-498c-4bed-93f3-3b42979d00e3" />
+<img width="1378" height="603" alt="Screenshot 2025-11-13 131120" src="https://github.com/user-attachments/assets/15aebcec-a58e-47ec-a505-89bc4654c0c3" />
 
 
 **RESULTS**
